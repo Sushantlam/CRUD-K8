@@ -1,0 +1,30 @@
+# Phase 15: Node Scheduling — pin MongoDB to a specific worker node
+#
+# 1. Label a worker node (find node names with `kubectl get nodes`):
+#      kubectl label nodes <cluster-name>-worker workload=database
+#
+# 2. Optionally taint that node so ONLY database pods can schedule there:
+#      kubectl taint nodes <cluster-name>-worker dedicated=database:NoSchedule
+#
+# 3. Patch the mongodb StatefulSet (k8s/mongodb/statefulset.yaml) with the
+#    affinity + toleration blocks below, under spec.template.spec:
+
+# --- add under spec.template.spec in statefulset.yaml ---
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workload
+              operator: In
+              values:
+                - database
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "database"
+    effect: "NoSchedule"
+# ---------------------------------------------------------
+
+# Verify placement:
+#   kubectl get pod -n mern -l app=mongodb -o wide

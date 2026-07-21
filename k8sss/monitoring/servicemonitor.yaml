@@ -1,0 +1,26 @@
+# Requires the Prometheus Operator CRDs (installed by kube-prometheus-stack).
+# Also add a "metrics" named port to k8s/backend/service.yaml, or Prometheus
+# won't know which port to scrape:
+#
+#   ports:
+#     - name: http
+#       port: 5000
+#       targetPort: 5000
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend-monitor
+  namespace: mern
+  labels:
+    release: monitoring   # must match the Helm release name so Prometheus picks it up
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  namespaceSelector:
+    matchNames:
+      - mern
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

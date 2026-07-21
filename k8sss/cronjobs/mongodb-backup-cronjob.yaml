@@ -1,0 +1,39 @@
+# Phase 16: CronJob — nightly MongoDB backup via mongodump.
+# Writes timestamped dumps to a PVC. In a real cluster you'd ship these
+# to S3/GCS with a sidecar or an extra step; on Kind, the PVC is enough
+# to practice the CronJob mechanics.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+  namespace: mern
+spec:
+  schedule: "0 2 * * *"   # 02:00 every day
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mongodump
+              image: mongo:7
+              command:
+                - /bin/sh
+                - -c
+                - >
+                  mongodump --host=mongodb --port=27017
+                  --out=/backup/$(date +%Y-%m-%d_%H-%M-%S)
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: mongodb-backup-pvc
+
+# Trigger one manually to test without waiting for the schedule:
+#   kubectl create job --from=cronjob/mongodb-backup manual-backup-test -n mern
+#   kubectl logs -n mern job/manual-backup-test

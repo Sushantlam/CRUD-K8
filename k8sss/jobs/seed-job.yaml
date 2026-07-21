@@ -1,0 +1,28 @@
+# Phase 17: Job — seed MongoDB with initial data after deployment.
+# Reuses the backend image, just overrides the container command.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed-db
+  namespace: mern
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: mern-backend:v1
+          command: ["node", "src/scripts/seed.js"]
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+
+# Run it:
+#   kubectl apply -f k8s/jobs/seed-job.yaml
+#   kubectl logs -n mern job/seed-db
+# Re-run after editing (Jobs are immutable):
+#   kubectl delete job seed-db -n mern && kubectl apply -f k8s/jobs/seed-job.yaml

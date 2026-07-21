@@ -1,0 +1,53 @@
+# Phase 20: RBAC
+#
+# The backend doesn't call the Kubernetes API today, so there's nothing for
+# broad permissions to protect against — which is exactly the point: give it
+# the *minimum* it would need if it ever did (e.g. reading its own ConfigMap
+# at runtime, or listing pods for a future "system status" admin feature).
+#
+# This grants read-only access to ConfigMaps/Secrets/Pods in the mern
+# namespace only - nothing cluster-wide, nothing that can write or delete.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: mern
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backend-role
+  namespace: mern
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-role-binding
+  namespace: mern
+subjects:
+  - kind: ServiceAccount
+    name: backend-sa
+    namespace: mern
+roleRef:
+  kind: Role
+  name: backend-role
+  apiGroup: rbac.authorization.k8s.io
+
+# To actually use this identity, add to k8s/backend/deployment.yaml under
+# spec.template.spec:
+#   serviceAccountName: backend-sa
+#
+# Verify the permission boundary:
+#   kubectl auth can-i list pods --as=system:serviceaccount:mern:backend-sa -n mern       # yes
+#   kubectl auth can-i delete pods --as=system:serviceaccount:mern:backend-sa -n mern     # no
+#   kubectl auth can-i list pods --as=system:serviceaccount:mern:backend-sa -n default    # no
