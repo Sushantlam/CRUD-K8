@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: mern-backend:v1
+          image: mern-backend:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
