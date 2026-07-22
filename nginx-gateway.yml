@@ -1,0 +1,6 @@
+apiVersion: gateway.nginx.org/v1alpha1
+kind: NginxGateway
+metadata:
+  name: nginx-gateway-config
+  namespace: nginx-gateway
+spec: {}
