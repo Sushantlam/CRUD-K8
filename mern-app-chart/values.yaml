@@ -1,0 +1,83 @@
+namespace: mern
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: mern-frontend
+    tag: v2
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  readinessProbe:
+    path: /health
+    port: 80
+    initialDelaySeconds: 3
+    periodSeconds: 10
+
+backend:
+  replicaCount: 2
+  image:
+    repository: mern-backend
+    tag: v2
+    pullPolicy: IfNotPresent
+  service:
+    port: 5000
+    targetPort: 5000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  readinessProbe:
+    path: /health/ready
+    port: 5000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  livenessProbe:
+    path: /health/live
+    port: 5000
+    initialDelaySeconds: 10
+    periodSeconds: 15
+
+mongodb:
+  image: mongo:7
+  service:
+    port: 27017
+    targetPort: 27017
+  pvc:
+    storage: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+config:
+  mongoHost: mongodb
+  mongoPort: "27017"
+  mongoDb: mernapp
+  port: "5000"
+  jwtExpiresIn: 1d
+  nodeEnv: production
+  corsOrigin: "*"
+
+secret:
+  jwtSecret: "8fR2xQv9@jT6pL1mN4wY7sD!cV3bK5z"
+
+gateway:
+  enabled: false
+  namespace: nginx-gateway
+  className: nginx
