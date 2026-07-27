@@ -52,18 +52,33 @@ backend:
 
 mongodb:
   image: mongo:7
+
   service:
     port: 27017
     targetPort: 27017
+
   pvc:
     storage: 1Gi
+
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
+
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 20
+    failureThreshold: 6
+
+  livenessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    timeoutSeconds: 20
+    failureThreshold: 5
 
 config:
   mongoHost: mongodb
@@ -78,6 +93,6 @@ secret:
   jwtSecret: "8fR2xQv9@jT6pL1mN4wY7sD!cV3bK5z"
 
 gateway:
-  enabled: false
+  enabled: true
   namespace: nginx-gateway
   className: nginx

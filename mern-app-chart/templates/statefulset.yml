@@ -31,10 +31,10 @@ spec:
                 - --eval
                 - "db.runCommand('ping').ok"
                 - --quiet
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 10
-            failureThreshold: 6
+            initialDelaySeconds: {{ .Values.mongodb.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mongodb.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.mongodb.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.mongodb.readinessProbe.failureThreshold }}
           livenessProbe:
             exec:
               command:
@@ -42,10 +42,10 @@ spec:
                 - --eval
                 - "db.runCommand('ping').ok"
                 - --quiet
-            initialDelaySeconds: 60
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: {{ .Values.mongodb.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mongodb.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.mongodb.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.mongodb.livenessProbe.failureThreshold }}
       volumes:
         - name: mongodb-data
           persistentVolumeClaim:
